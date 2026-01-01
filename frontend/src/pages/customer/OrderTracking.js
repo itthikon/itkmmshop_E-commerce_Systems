@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../config/api';
+import PaymentSlipUpload from '../../components/payment/PaymentSlipUpload';
+import PaymentSlipViewer from '../../components/payment/PaymentSlipViewer';
 import './OrderTracking.css';
 
 const OrderTracking = () => {
@@ -10,6 +12,11 @@ const OrderTracking = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Payment slip state
+  const [payment, setPayment] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [showSlipViewer, setShowSlipViewer] = useState(false);
   
   // For guest tracking
   const [trackingOrderNumber, setTrackingOrderNumber] = useState('');
@@ -24,6 +31,12 @@ const OrderTracking = () => {
     }
   }, [orderId]);
 
+  useEffect(() => {
+    if (order && (order.payment_method === 'bank_transfer' || order.payment_method === 'promptpay')) {
+      fetchPaymentData();
+    }
+  }, [order]);
+
   const fetchOrder = async (id) => {
     setLoading(true);
     setError(null);
@@ -36,6 +49,23 @@ const OrderTracking = () => {
       console.error('Error fetching order:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPaymentData = async () => {
+    if (!order || !order.id) return;
+    
+    setPaymentLoading(true);
+    try {
+      const response = await api.get(`/payments/order/${order.id}`);
+      if (response.data.success && response.data.payment) {
+        setPayment(response.data.payment);
+      }
+    } catch (err) {
+      console.error('Error fetching payment:', err);
+      // Don't show error if payment doesn't exist yet
+    } finally {
+      setPaymentLoading(false);
     }
   };
 
@@ -110,6 +140,28 @@ const OrderTracking = () => {
 
   const handleViewReceipt = () => {
     window.open(`/api/payments/${order.id}/receipt`, '_blank');
+  };
+
+  const handleUploadSuccess = (newPayment) => {
+    setPayment(newPayment);
+    fetchOrder(order.id); // Refresh order data
+  };
+
+  const handleUploadError = (error) => {
+    console.error('Upload error:', error);
+  };
+
+  const getPaymentStatusBadge = (status) => {
+    const badges = {
+      pending: { text: 'รอตรวจสอบ', class: 'payment-status-pending', icon: '⏳' },
+      verified: { text: 'ยืนยันแล้ว', class: 'payment-status-verified', icon: '✓' },
+      rejected: { text: 'ปฏิเสธ', class: 'payment-status-rejected', icon: '✕' }
+    };
+    return badges[status] || { text: status, class: 'payment-status-default', icon: '?' };
+  };
+
+  const shouldShowPaymentSection = () => {
+    return order && (order.payment_method === 'bank_transfer' || order.payment_method === 'promptpay');
   };
 
   if (loading) {
@@ -256,6 +308,88 @@ const OrderTracking = () => {
               ))}
             </div>
           </div>
+
+          {/* Payment Section */}
+          {shouldShowPaymentSection() && (
+            <div className="payment-section-tracking">
+              <h3>การชำระเงิน</h3>
+              
+              {paymentLoading ? (
+                <div className="payment-loading">
+                  <div className="spinner-small"></div>
+                  <span>กำลังโหลดข้อมูลการชำระเงิน...</span>
+                </div>
+              ) : payment && payment.slip_image_path ? (
+                /* Has payment slip */
+                <div className="payment-slip-display">
+                  <div className="slip-thumbnail-container">
+                    <img 
+                      src={`${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5050'}${payment.slip_image_path}`}
+                      alt="Payment slip"
+                      className="slip-thumbnail"
+                      onClick={() => setShowSlipViewer(true)}
+                    />
+                    <button 
+                      className="view-full-btn"
+                      onClick={() => setShowSlipViewer(true)}
+                    >
+                      🔍 ดูเต็มขนาด
+                    </button>
+                  </div>
+                  
+                  <div className="payment-status-info">
+                    <div className={`payment-status-badge ${getPaymentStatusBadge(payment.status).class}`}>
+                      {getPaymentStatusBadge(payment.status).icon} {getPaymentStatusBadge(payment.status).text}
+                    </div>
+                    
+                    {payment.status === 'verified' && payment.verified_at && (
+                      <p className="payment-verified-info">
+                        ✓ ยืนยันเมื่อ: {formatDate(payment.verified_at)}
+                      </p>
+                    )}
+                    
+                    {payment.status === 'rejected' && (
+                      <div className="payment-rejected-info">
+                        <p className="rejection-reason">
+                          <strong>เหตุผลที่ปฏิเสธ:</strong> {payment.rejection_reason || 'ไม่ระบุ'}
+                        </p>
+                        <p className="reupload-instruction">
+                          กรุณาอัปโหลดสลิปใหม่ด้านล่าง
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Allow re-upload if rejected */}
+                  {payment.status === 'rejected' && (
+                    <div className="reupload-section">
+                      <PaymentSlipUpload
+                        orderId={order.id}
+                        orderAmount={order.total_amount}
+                        onUploadSuccess={handleUploadSuccess}
+                        onUploadError={handleUploadError}
+                        showInstructions={false}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* No payment slip yet */
+                <div className="no-payment-slip">
+                  <p className="no-slip-message">
+                    📤 ยังไม่ได้อัปโหลดสลิปการโอนเงิน
+                  </p>
+                  <PaymentSlipUpload
+                    orderId={order.id}
+                    orderAmount={order.total_amount}
+                    onUploadSuccess={handleUploadSuccess}
+                    onUploadError={handleUploadError}
+                    showInstructions={true}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="tracking-sidebar">
@@ -314,6 +448,16 @@ const OrderTracking = () => {
           </div>
         </div>
       </div>
+
+      {/* Payment Slip Viewer Modal */}
+      {showSlipViewer && payment && (
+        <PaymentSlipViewer
+          payment={payment}
+          order={order}
+          onClose={() => setShowSlipViewer(false)}
+          isStaff={false}
+        />
+      )}
     </div>
   );
 };

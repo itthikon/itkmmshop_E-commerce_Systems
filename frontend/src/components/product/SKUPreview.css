@@ -1,0 +1,206 @@
+/* SKU Preview Component Styles */
+/* Requirements: 8.1, 8.4 */
+
+.sku-preview-container {
+  margin-bottom: 1.5rem;
+}
+
+.sku-preview-label {
+  display: block;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.required-indicator {
+  color: #e53e3e;
+  margin-left: 0.25rem;
+}
+
+/* SKU Preview Wrapper - Contains display and button */
+.sku-preview-wrapper {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+/* SKU Display Field */
+.sku-display {
+  background-color: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  cursor: not-allowed;
+  flex: 1;
+}
+
+.sku-display.loading {
+  border-color: #4299e1;
+  background-color: #ebf8ff;
+}
+
+.sku-display.error {
+  border-color: #fc8181;
+  background-color: #fff5f5;
+}
+
+/* SKU Value */
+.sku-value {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2d3748;
+  letter-spacing: 0.5px;
+}
+
+/* Placeholder Text */
+.sku-placeholder {
+  color: #a0aec0;
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+/* Loading State */
+.sku-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #4299e1;
+}
+
+.loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #bee3f8;
+  border-top-color: #4299e1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Error State */
+.sku-error {
+  color: #e53e3e;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Hint Text */
+.sku-hint {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #718096;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.sku-hint.sku-immutable {
+  color: #805ad5;
+  font-weight: 500;
+}
+
+.sku-hint.success-hint {
+  color: #38a169;
+  font-weight: 500;
+}
+
+/* Generate SKU Button */
+.generate-sku-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.875rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+  min-height: 48px;
+}
+
+.generate-sku-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+.generate-sku-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+.generate-sku-btn:disabled {
+  background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sku-preview-wrapper {
+    flex-direction: column;
+  }
+
+  .sku-display {
+    padding: 0.75rem;
+    min-height: 44px;
+  }
+
+  .sku-value {
+    font-size: 1rem;
+  }
+
+  .sku-hint {
+    font-size: 0.8125rem;
+  }
+
+  .generate-sku-btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    min-height: 44px;
+  }
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+  .sku-preview-label {
+    color: #e2e8f0;
+  }
+
+  .sku-display {
+    background-color: #2d3748;
+    border-color: #4a5568;
+  }
+
+  .sku-value {
+    color: #e2e8f0;
+  }
+
+  .sku-placeholder {
+    color: #718096;
+  }
+
+  .sku-hint {
+    color: #a0aec0;
+  }
+}

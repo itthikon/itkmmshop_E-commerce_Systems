@@ -11,18 +11,30 @@ class ProductCategory {
    * @returns {Promise<Object>} Created category with ID
    */
   static async create(categoryData) {
-    const { name, description, parent_id, status } = categoryData;
+    const { name, description, parent_id, status, prefix } = categoryData;
+
+    // Validate and normalize prefix
+    const normalizedPrefix = this.validateAndNormalizePrefix(prefix);
+
+    // Check prefix uniqueness if provided
+    if (normalizedPrefix) {
+      const isUnique = await this.isPrefixUnique(normalizedPrefix);
+      if (!isUnique) {
+        throw new Error('Prefix already exists. Please choose a different prefix.');
+      }
+    }
 
     const query = `
-      INSERT INTO product_categories (name, description, parent_id, status)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO product_categories (name, description, parent_id, status, prefix)
+      VALUES (?, ?, ?, ?, ?)
     `;
 
     const values = [
       name,
       description || null,
       parent_id || null,
-      status || 'active'
+      status || 'active',
+      normalizedPrefix
     ];
 
     const [result] = await db.pool.execute(query, values);
@@ -95,7 +107,20 @@ class ProductCategory {
    * @returns {Promise<Object>} Updated category
    */
   static async update(id, updateData) {
-    const allowedFields = ['name', 'description', 'parent_id', 'status'];
+    const allowedFields = ['name', 'description', 'parent_id', 'status', 'prefix'];
+
+    // Validate and normalize prefix if provided
+    if (updateData.prefix !== undefined) {
+      updateData.prefix = this.validateAndNormalizePrefix(updateData.prefix);
+      
+      // Check prefix uniqueness if provided (exclude current category)
+      if (updateData.prefix) {
+        const isUnique = await this.isPrefixUnique(updateData.prefix, id);
+        if (!isUnique) {
+          throw new Error('Prefix already exists. Please choose a different prefix.');
+        }
+      }
+    }
 
     const updates = [];
     const values = [];
@@ -137,6 +162,53 @@ class ProductCategory {
     const query = `DELETE FROM product_categories WHERE id = ?`;
     const [result] = await db.pool.execute(query, [id]);
     return result.affectedRows > 0;
+  }
+
+  /**
+   * Validate and normalize prefix
+   * @param {string} prefix - Category prefix to validate
+   * @returns {string|null} Normalized prefix or null
+   */
+  static validateAndNormalizePrefix(prefix) {
+    // If prefix is not provided or is empty, return null
+    if (!prefix || prefix.trim() === '') {
+      return null;
+    }
+
+    // Normalize: trim and convert to uppercase
+    const normalized = prefix.trim().toUpperCase();
+
+    // Validate length: must be 2-4 characters
+    if (normalized.length < 2 || normalized.length > 4) {
+      throw new Error('Prefix must be 2-4 characters long');
+    }
+
+    // Validate characters: must be A-Z only
+    if (!/^[A-Z]+$/.test(normalized)) {
+      throw new Error('Prefix must contain only English letters (A-Z)');
+    }
+
+    return normalized;
+  }
+
+  /**
+   * Check if prefix is unique
+   * @param {string} prefix - Prefix to check
+   * @param {number|null} excludeId - Category ID to exclude from check (for updates)
+   * @returns {Promise<boolean>} True if prefix is unique
+   */
+  static async isPrefixUnique(prefix, excludeId = null) {
+    let query = 'SELECT id FROM product_categories WHERE prefix = ?';
+    const params = [prefix];
+
+    // Exclude current category when updating
+    if (excludeId) {
+      query += ' AND id != ?';
+      params.push(excludeId);
+    }
+
+    const [rows] = await db.pool.execute(query, params);
+    return rows.length === 0;
   }
 }
 

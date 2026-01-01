@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตรวจสอบ Payment Method</title>
+    <style>
+        body {
+            font-family: 'Sarabun', Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        .result.success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            display: block;
+        }
+        .result.error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            display: block;
+        }
+        .info-box {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .code-block {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        .check-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .check-pass {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .check-fail {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 ตรวจสอบ Payment Method ของ Order</h1>
+        
+        <div class="info-box">
+            <p><strong>วิธีใช้:</strong></p>
+            <ol>
+                <li>ใส่หมายเลขคำสั่งซื้อ (Order ID) ที่ต้องการตรวจสอบ</li>
+                <li>กดปุ่ม "ตรวจสอบ"</li>
+                <li>ดูผลลัพธ์ว่า payment_method คืออะไร</li>
+                <li>ดูว่าควรแสดงช่องอัปโหลดสลิปหรือไม่</li>
+            </ol>
+        </div>
+
+        <div class="input-group">
+            <label for="orderId">หมายเลขคำสั่งซื้อ (Order ID):</label>
+            <input type="number" id="orderId" placeholder="เช่น 8" value="8">
+        </div>
+
+        <button onclick="checkOrder()">🔍 ตรวจสอบ</button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        async function checkOrder() {
+            const orderId = document.getElementById('orderId').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!orderId) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '<p>❌ กรุณาใส่หมายเลขคำสั่งซื้อ</p>';
+                return;
+            }
+
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<p>⏳ กำลังตรวจสอบ...</p>';
+            resultDiv.style.display = 'block';
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/orders/${orderId}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'ไม่สามารถดึงข้อมูลได้');
+                }
+
+                const order = data.data || data;
+                
+                // Check if upload section should show
+                const method = (order.payment_method || '').toLowerCase();
+                const shouldShow = method === 'bank_transfer' || 
+                                 method === 'bank transfer' || 
+                                 method === 'promptpay' || 
+                                 method === 'prompt_pay';
+
+                let html = '<h2>✅ ผลการตรวจสอบ</h2>';
+                
+                html += '<div class="info-box">';
+                html += `<p><strong>Order ID:</strong> ${order.id}</p>`;
+                html += `<p><strong>Order Number:</strong> ${order.order_number || 'N/A'}</p>`;
+                html += `<p><strong>Status:</strong> ${order.status}</p>`;
+                html += `<p><strong>Total:</strong> ฿${order.total_amount}</p>`;
+                html += '</div>';
+
+                html += '<h3>📋 Payment Method</h3>';
+                html += '<div class="code-block">';
+                html += `payment_method: "<span class="highlight">${order.payment_method}</span>"`;
+                html += '</div>';
+
+                html += '<h3>🔍 การตรวจสอบเงื่อนไข</h3>';
+                
+                const checks = {
+                    'bank_transfer': method === 'bank_transfer',
+                    'bank transfer': method === 'bank transfer',
+                    'promptpay': method === 'promptpay',
+                    'prompt_pay': method === 'prompt_pay'
+                };
+
+                for (const [key, value] of Object.entries(checks)) {
+                    const className = value ? 'check-pass' : 'check-fail';
+                    const icon = value ? '✅' : '❌';
+                    html += `<div class="check-item ${className}">`;
+                    html += `${icon} method === "${key}": ${value}`;
+                    html += '</div>';
+                }
+
+                html += '<h3>📊 สรุปผล</h3>';
+                html += '<div class="info-box">';
+                if (shouldShow) {
+                    html += '<p style="color: #059669; font-size: 1.2rem; font-weight: 600;">✅ ควรแสดงช่องอัปโหลดสลิป</p>';
+                    html += '<p>Payment method ตรงกับเงื่อนไข (bank_transfer หรือ promptpay)</p>';
+                } else {
+                    html += '<p style="color: #dc2626; font-size: 1.2rem; font-weight: 600;">❌ ไม่ควรแสดงช่องอัปโหลดสลิป</p>';
+                    html += `<p>Payment method: "${order.payment_method}" ไม่ตรงกับเงื่อนไข</p>';
+                    
+                    if (method === 'cod' || method === 'cash') {
+                        html += '<p style="color: #059669;">✓ ถูกต้อง - เพราะเป็นการชำระเงินปลายทาง</p>';
+                    } else {
+                        html += '<p style="color: #dc2626;">⚠️ อาจมีปัญหา - ควรแสดงช่องอัปโหลดแต่ไม่แสดง</p>';
+                        html += '<p><strong>แนะนำ:</strong> ไปที่หน้า "ติดตามคำสั่งซื้อ" เพื่ออัปโหลดสลิป</p>';
+                    }
+                }
+                html += '</div>';
+
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h2>❌ เกิดข้อผิดพลาด</h2>
+                    <p>${error.message}</p>
+                    <div class="info-box">
+                        <p><strong>กรุณาตรวจสอบ:</strong></p>
+                        <ul>
+                            <li>Backend server กำลังทำงานอยู่หรือไม่ (http://localhost:5000)</li>
+                            <li>Order ID ถูกต้องหรือไม่</li>
+                            <li>มีสิทธิ์เข้าถึงข้อมูล order นี้หรือไม่</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto check on load if order ID is provided
+        window.onload = function() {
+            const orderId = document.getElementById('orderId').value;
+            if (orderId) {
+                checkOrder();
+            }
+        };
+    </script>
+</body>
+</html>

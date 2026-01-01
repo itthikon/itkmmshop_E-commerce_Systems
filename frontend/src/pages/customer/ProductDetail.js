@@ -154,6 +154,13 @@ const ProductDetail = () => {
             </div>
           )}
 
+          {product.defects && (
+            <div className="product-defects">
+              <h3>⚠️ ตำหนิของสินค้า</h3>
+              <p className="defects-text">{product.defects}</p>
+            </div>
+          )}
+
           {product.stock_quantity > 0 && (
             <div className="product-actions">
               <div className="quantity-selector">

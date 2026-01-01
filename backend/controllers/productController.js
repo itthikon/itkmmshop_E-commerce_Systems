@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const ProductCategory = require('../models/ProductCategory');
+const SKUGeneratorService = require('../services/SKUGeneratorService');
 const Joi = require('joi');
 
 /**
@@ -8,10 +9,92 @@ const Joi = require('joi');
  */
 
 /**
+ * Generate SKU preview for product
+ * @route POST /api/products/generate-sku
+ * @access Private (Admin only)
+ */
+exports.generateSKU = async (req, res) => {
+  try {
+    const { category_id } = req.body;
+
+    // Validate category_id if provided
+    if (category_id !== null && category_id !== undefined) {
+      if (typeof category_id !== 'number' || category_id <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'category_id ต้องเป็นตัวเลขที่มากกว่า 0'
+          }
+        });
+      }
+    }
+
+    // Generate SKU using SKU Generator Service
+    const sku = await SKUGeneratorService.generateSKU(category_id || null);
+    
+    // Get prefix and sequential number from generated SKU
+    const prefix = sku.match(/^[A-Z]{2,4}/)[0];
+    const sequentialNumber = sku.match(/\d{5}$/)[0];
+
+    // Get category name if category_id provided
+    let categoryName = null;
+    if (category_id) {
+      const category = await ProductCategory.findById(category_id);
+      categoryName = category ? category.name : null;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        sku,
+        prefix,
+        sequential_number: sequentialNumber,
+        category_id: category_id || null,
+        category_name: categoryName
+      }
+    });
+  } catch (err) {
+    console.error('Generate SKU error:', err);
+
+    // Handle specific SKU generation errors
+    if (err.code === 'SKU_LIMIT_REACHED') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: err.code,
+          message: err.message,
+          suggestion: err.suggestion
+        }
+      });
+    }
+
+    if (err.code === 'DUPLICATE_SKU') {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: err.code,
+          message: err.message,
+          suggestion: err.suggestion
+        }
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SERVER_ERROR',
+        message: 'เกิดข้อผิดพลาดในการสร้าง SKU'
+      }
+    });
+  }
+};
+
+/**
  * Validation schema for product creation
  */
 const createProductSchema = Joi.object({
-  sku: Joi.string().required().max(50),
+  sku: Joi.string().max(50).optional(), // SKU is now optional, will be auto-generated
   name: Joi.string().required().max(255),
   description: Joi.string().allow('', null),
   category_id: Joi.number().integer().positive().allow(null),
@@ -22,7 +105,8 @@ const createProductSchema = Joi.object({
   stock_quantity: Joi.number().integer().min(0).default(0),
   low_stock_threshold: Joi.number().integer().min(0).default(10),
   image_path: Joi.string().allow('', null),
-  status: Joi.string().valid('active', 'inactive', 'out_of_stock').default('active')
+  status: Joi.string().valid('active', 'inactive', 'out_of_stock').default('active'),
+  defects: Joi.string().allow('', null)
 });
 
 /**
@@ -40,7 +124,8 @@ const updateProductSchema = Joi.object({
   stock_quantity: Joi.number().integer().min(0),
   low_stock_threshold: Joi.number().integer().min(0),
   image_path: Joi.string().allow('', null),
-  status: Joi.string().valid('active', 'inactive', 'out_of_stock')
+  status: Joi.string().valid('active', 'inactive', 'out_of_stock'),
+  defects: Joi.string().allow('', null)
 }).min(1);
 
 /**
@@ -59,6 +144,47 @@ exports.createProduct = async (req, res) => {
           code: 'VALIDATION_ERROR',
           message: 'ข้อมูลไม่ถูกต้อง',
           details: error.details[0].message
+        }
+      });
+    }
+
+    // Auto-generate SKU if not provided
+    if (!value.sku) {
+      try {
+        value.sku = await SKUGeneratorService.generateSKU(value.category_id || null);
+      } catch (skuError) {
+        console.error('SKU generation error:', skuError);
+        
+        // Handle specific SKU generation errors
+        if (skuError.code === 'SKU_LIMIT_REACHED') {
+          return res.status(400).json({
+            success: false,
+            error: {
+              code: skuError.code,
+              message: skuError.message,
+              suggestion: skuError.suggestion
+            }
+          });
+        }
+
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'SKU_GENERATION_ERROR',
+            message: 'เกิดข้อผิดพลาดในการสร้าง SKU อัตโนมัติ'
+          }
+        });
+      }
+    }
+
+    // Validate generated SKU format
+    if (!SKUGeneratorService.validateSKUFormat(value.sku)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_SKU_FORMAT',
+          message: 'รูปแบบ SKU ไม่ถูกต้อง',
+          suggestion: 'SKU ต้องเป็น [PREFIX][00001-99999]'
         }
       });
     }
@@ -198,19 +324,20 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    // Check if SKU is being changed and if it already exists
+    // Prevent SKU modification - SKU is immutable
     if (value.sku && value.sku !== existingProduct.sku) {
-      const duplicateSku = await Product.findBySku(value.sku);
-      if (duplicateSku) {
-        return res.status(409).json({
-          success: false,
-          error: {
-            code: 'DUPLICATE_SKU',
-            message: 'SKU นี้มีอยู่ในระบบแล้ว'
-          }
-        });
-      }
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'SKU_IMMUTABLE',
+          message: 'ไม่สามารถเปลี่ยนแปลง SKU ได้',
+          suggestion: 'SKU ถูกสร้างอัตโนมัติและไม่สามารถแก้ไขได้'
+        }
+      });
     }
+
+    // Remove SKU from update data to ensure it's not changed
+    delete value.sku;
 
     // Update product
     const product = await Product.update(req.params.id, value);

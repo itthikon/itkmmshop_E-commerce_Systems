@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../config/api';
+import { useCart } from '../../context/CartContext';
 import './ShoppingCart.css';
 
 const ShoppingCart = () => {
   const navigate = useNavigate();
+  const { cartData, loading: contextLoading, fetchCart, updateCartItem, removeFromCart } = useCart();
   
   const [cartItems, setCartItems] = useState([]);
   const [cartSummary, setCartSummary] = useState(null);
@@ -13,24 +14,23 @@ const ShoppingCart = () => {
   const [updating, setUpdating] = useState({});
 
   useEffect(() => {
+    // Use cart data from context
+    if (cartData) {
+      setCartItems(cartData.items || []);
+      setCartSummary({
+        subtotal_excluding_vat: cartData.subtotal_excluding_vat || 0,
+        total_vat: cartData.total_vat || 0,
+        discount_amount: cartData.discount_amount || 0,
+        total_amount: cartData.total_amount || 0
+      });
+    }
+    setLoading(contextLoading);
+  }, [cartData, contextLoading]);
+
+  useEffect(() => {
+    // Fetch cart on mount
     fetchCart();
   }, []);
-
-  const fetchCart = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await api.get('/cart');
-      setCartItems(response.data.items || []);
-      setCartSummary(response.data.summary || null);
-    } catch (err) {
-      setError(err.message || 'เกิดข้อผิดพลาดในการโหลดตะกร้าสินค้า');
-      console.error('Error fetching cart:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('th-TH', {
@@ -39,38 +39,41 @@ const ShoppingCart = () => {
     }).format(price);
   };
 
-  const handleQuantityChange = async (itemId, newQuantity) => {
+  const handleQuantityChange = async (productId, newQuantity) => {
     if (newQuantity < 1) return;
     
-    setUpdating(prev => ({ ...prev, [itemId]: true }));
+    setUpdating(prev => ({ ...prev, [productId]: true }));
     
     try {
-      await api.put('/cart/update', {
-        cart_item_id: itemId,
-        quantity: newQuantity
-      });
+      const result = await updateCartItem(productId, newQuantity);
       
-      await fetchCart();
+      if (!result.success) {
+        alert(result.error || 'เกิดข้อผิดพลาดในการอัปเดตจำนวนสินค้า');
+      }
     } catch (err) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการอัปเดตจำนวนสินค้า');
+      alert('เกิดข้อผิดพลาดในการอัปเดตจำนวนสินค้า');
     } finally {
-      setUpdating(prev => ({ ...prev, [itemId]: false }));
+      setUpdating(prev => ({ ...prev, [productId]: false }));
     }
   };
 
-  const handleRemoveItem = async (itemId) => {
+  const handleRemoveItem = async (productId) => {
     if (!window.confirm('คุณต้องการลบสินค้านี้ออกจากตะกร้าหรือไม่?')) {
       return;
     }
     
-    setUpdating(prev => ({ ...prev, [itemId]: true }));
+    setUpdating(prev => ({ ...prev, [productId]: true }));
     
     try {
-      await api.delete(`/cart/remove/${itemId}`);
-      await fetchCart();
+      const result = await removeFromCart(productId);
+      
+      if (!result.success) {
+        alert(result.error || 'เกิดข้อผิดพลาดในการลบสินค้า');
+      }
     } catch (err) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการลบสินค้า');
-      setUpdating(prev => ({ ...prev, [itemId]: false }));
+      alert('เกิดข้อผิดพลาดในการลบสินค้า');
+    } finally {
+      setUpdating(prev => ({ ...prev, [productId]: false }));
     }
   };
 
@@ -86,7 +89,7 @@ const ShoppingCart = () => {
     return (
       <div className="error-message">
         <p>{error}</p>
-        <button onClick={fetchCart} className="retry-button">
+        <button onClick={() => fetchCart()} className="retry-button">
           ลองอีกครั้ง
         </button>
       </div>
@@ -113,7 +116,7 @@ const ShoppingCart = () => {
       <div className="cart-layout">
         <div className="cart-items-section">
           {cartItems.map(item => (
-            <div key={item.id} className="cart-item">
+            <div key={item.product_id} className="cart-item">
               <div className="cart-item-image">
                 {item.product_image_url ? (
                   <img src={item.product_image_url} alt={item.product_name} />
@@ -145,16 +148,16 @@ const ShoppingCart = () => {
                   <div className="quantity-controls-cart">
                     <button
                       className="qty-button"
-                      onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                      disabled={item.quantity <= 1 || updating[item.id]}
+                      onClick={() => handleQuantityChange(item.product_id, item.quantity - 1)}
+                      disabled={item.quantity <= 1 || updating[item.product_id]}
                     >
                       -
                     </button>
                     <span className="qty-display">{item.quantity}</span>
                     <button
                       className="qty-button"
-                      onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                      disabled={updating[item.id]}
+                      onClick={() => handleQuantityChange(item.product_id, item.quantity + 1)}
+                      disabled={updating[item.product_id]}
                     >
                       +
                     </button>
@@ -169,8 +172,8 @@ const ShoppingCart = () => {
 
               <button
                 className="remove-item-button"
-                onClick={() => handleRemoveItem(item.id)}
-                disabled={updating[item.id]}
+                onClick={() => handleRemoveItem(item.product_id)}
+                disabled={updating[item.product_id]}
                 title="ลบสินค้า"
               >
                 ✕

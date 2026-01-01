@@ -59,23 +59,28 @@ CREATE TABLE addresses (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Product categories table
+-- Includes prefix column for auto SKU generation
 CREATE TABLE product_categories (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     description TEXT DEFAULT NULL,
+    prefix VARCHAR(4) DEFAULT NULL COMMENT 'Category prefix for SKU generation (2-4 uppercase letters, e.g., ELEC, FASH)',
     parent_id INT DEFAULT NULL,
     status ENUM('active', 'inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (parent_id) REFERENCES product_categories(id) ON DELETE SET NULL,
+    UNIQUE KEY unique_prefix (prefix),
+    INDEX idx_prefix (prefix),
     INDEX idx_parent_id (parent_id),
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Products table: includes VAT calculation fields
+-- SKU is auto-generated in format [PREFIX][00001-99999] based on category
 CREATE TABLE products (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    sku VARCHAR(50) UNIQUE NOT NULL,
+    sku VARCHAR(50) UNIQUE NOT NULL COMMENT 'Auto-generated SKU: [PREFIX][00001-99999] (e.g., ELEC00001, GEN00123)',
     name VARCHAR(255) NOT NULL,
     description TEXT DEFAULT NULL,
     category_id INT DEFAULT NULL,

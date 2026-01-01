@@ -1,0 +1,460 @@
+.payment-slip-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.payment-slip-viewer {
+  background: white;
+  border-radius: 12px;
+  max-width: 1200px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.viewer-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.viewer-close-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: rotate(90deg);
+}
+
+.viewer-close-btn:focus {
+  outline: 3px solid white;
+  outline-offset: 2px;
+}
+
+.viewer-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 90vh;
+  max-height: 800px;
+}
+
+/* Image Section */
+.viewer-image-section {
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e0e0e0;
+}
+
+.viewer-zoom-controls {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  justify-content: center;
+}
+
+.viewer-zoom-controls button {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.viewer-zoom-controls button:hover:not(:disabled) {
+  background: #5568d3;
+  transform: translateY(-2px);
+}
+
+.viewer-zoom-controls button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.viewer-zoom-controls button:focus {
+  outline: 3px solid #667eea;
+  outline-offset: 2px;
+}
+
+.viewer-image-container {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+}
+
+.viewer-slip-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.viewer-slip-image:active {
+  cursor: grabbing;
+}
+
+/* Details Section */
+.viewer-details-section {
+  padding: 30px;
+  overflow-y: auto;
+  background: white;
+}
+
+.viewer-title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin: 0 0 20px 0;
+  color: #333;
+}
+
+.viewer-status {
+  margin-bottom: 25px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-verified {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.viewer-info-group {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.viewer-info-group:last-of-type {
+  border-bottom: none;
+}
+
+.info-group-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+  color: #667eea;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.info-value {
+  font-weight: 600;
+  color: #333;
+  text-align: right;
+}
+
+.info-value.amount {
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+.rejection-info {
+  background: #fff5f5;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #feb2b2;
+}
+
+.rejection-reason {
+  margin: 0;
+  color: #c53030;
+  line-height: 1.6;
+}
+
+.notes-text {
+  margin: 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Action Buttons */
+.viewer-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.viewer-actions button {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-verify {
+  background: #28a745;
+  color: white;
+}
+
+.btn-verify:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.btn-verify:focus {
+  outline: 3px solid #28a745;
+  outline-offset: 2px;
+}
+
+.btn-reject {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-reject:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-reject:focus {
+  outline: 3px solid #dc3545;
+  outline-offset: 2px;
+}
+
+.viewer-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Rejection Modal */
+.reject-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.reject-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+.reject-modal-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.reject-modal-description {
+  color: #666;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.reject-reason-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 20px;
+  transition: border-color 0.2s ease;
+}
+
+.reject-reason-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.reject-modal-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.reject-modal-actions button {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.btn-cancel:focus {
+  outline: 3px solid #6c757d;
+  outline-offset: 2px;
+}
+
+.btn-confirm-reject {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-confirm-reject:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.btn-confirm-reject:focus {
+  outline: 3px solid #dc3545;
+  outline-offset: 2px;
+}
+
+.reject-modal-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .viewer-content {
+    grid-template-columns: 1fr;
+    max-height: none;
+  }
+
+  .viewer-image-section {
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+    max-height: 50vh;
+  }
+
+  .viewer-details-section {
+    max-height: 50vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .payment-slip-viewer-overlay {
+    padding: 0;
+  }
+
+  .payment-slip-viewer {
+    border-radius: 0;
+    max-height: 100vh;
+    height: 100vh;
+  }
+
+  .viewer-content {
+    height: 100vh;
+  }
+
+  .viewer-details-section {
+    padding: 20px;
+  }
+
+  .viewer-title {
+    font-size: 1.5rem;
+  }
+
+  .viewer-actions {
+    flex-direction: column;
+  }
+
+  .reject-modal {
+    padding: 20px;
+  }
+}

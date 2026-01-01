@@ -6,6 +6,13 @@ const { uploadProductImage } = require('../middleware/upload');
 const { cacheMiddleware, CACHE_DURATION } = require('../middleware/cache');
 
 /**
+ * @route   POST /api/products/generate-sku
+ * @desc    Generate SKU preview for product
+ * @access  Private (Admin only)
+ */
+router.post('/generate-sku', authenticate, authorize(['admin']), productController.generateSKU);
+
+/**
  * @route   GET /api/products
  * @desc    Get all products with filtering and pagination
  * @access  Public

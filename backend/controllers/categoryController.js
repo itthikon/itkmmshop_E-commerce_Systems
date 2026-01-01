@@ -12,6 +12,7 @@ const Joi = require('joi');
 const createCategorySchema = Joi.object({
   name: Joi.string().required().max(100),
   description: Joi.string().allow('', null),
+  prefix: Joi.string().min(2).max(4).pattern(/^[A-Za-z]+$/).allow(null).optional(),
   parent_id: Joi.number().integer().positive().allow(null),
   status: Joi.string().valid('active', 'inactive').default('active')
 });
@@ -22,6 +23,7 @@ const createCategorySchema = Joi.object({
 const updateCategorySchema = Joi.object({
   name: Joi.string().max(100),
   description: Joi.string().allow('', null),
+  prefix: Joi.string().min(2).max(4).pattern(/^[A-Za-z]+$/).allow(null).optional(),
   parent_id: Joi.number().integer().positive().allow(null),
   status: Joi.string().valid('active', 'inactive')
 }).min(1);
@@ -44,6 +46,35 @@ exports.createCategory = async (req, res) => {
           details: error.details[0].message
         }
       });
+    }
+
+    // Validate and normalize prefix if provided
+    if (value.prefix) {
+      try {
+        value.prefix = ProductCategory.validateAndNormalizePrefix(value.prefix);
+        
+        // Check prefix uniqueness
+        const isPrefixUnique = await ProductCategory.isPrefixUnique(value.prefix);
+        if (!isPrefixUnique) {
+          return res.status(409).json({
+            success: false,
+            error: {
+              code: 'DUPLICATE_PREFIX',
+              message: 'Prefix นี้ถูกใช้งานแล้ว',
+              suggestion: 'กรุณาเลือก Prefix อื่น'
+            }
+          });
+        }
+      } catch (prefixError) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_PREFIX',
+            message: prefixError.message,
+            suggestion: 'Prefix ต้องเป็นตัวอักษรภาษาอังกฤษ 2-4 ตัว'
+          }
+        });
+      }
     }
 
     // Create category
@@ -161,6 +192,57 @@ exports.updateCategory = async (req, res) => {
           message: 'ไม่พบหมวดหมู่'
         }
       });
+    }
+
+    // Validate and normalize prefix if provided
+    if (value.prefix !== undefined) {
+      // Check if prefix is being changed
+      const isPrefixChanged = value.prefix !== existingCategory.prefix;
+      
+      if (value.prefix) {
+        try {
+          value.prefix = ProductCategory.validateAndNormalizePrefix(value.prefix);
+          
+          // Check prefix uniqueness (excluding current category)
+          const isPrefixUnique = await ProductCategory.isPrefixUnique(value.prefix, req.params.id);
+          if (!isPrefixUnique) {
+            return res.status(409).json({
+              success: false,
+              error: {
+                code: 'DUPLICATE_PREFIX',
+                message: 'Prefix นี้ถูกใช้งานแล้ว',
+                suggestion: 'กรุณาเลือก Prefix อื่น'
+              }
+            });
+          }
+        } catch (prefixError) {
+          return res.status(400).json({
+            success: false,
+            error: {
+              code: 'INVALID_PREFIX',
+              message: prefixError.message,
+              suggestion: 'Prefix ต้องเป็นตัวอักษรภาษาอังกฤษ 2-4 ตัว'
+            }
+          });
+        }
+      }
+
+      // Add warning if prefix is being changed
+      if (isPrefixChanged && existingCategory.prefix) {
+        // We'll include a warning in the response
+        const category = await ProductCategory.update(req.params.id, value);
+        
+        return res.json({
+          success: true,
+          data: category,
+          message: 'อัปเดตหมวดหมู่สำเร็จ',
+          warning: {
+            code: 'PREFIX_CHANGE_WARNING',
+            message: 'การเปลี่ยน Prefix จะมีผลกับสินค้าใหม่เท่านั้น',
+            suggestion: 'สินค้าที่มีอยู่จะยังคงใช้ SKU เดิม'
+          }
+        });
+      }
     }
 
     // Update category

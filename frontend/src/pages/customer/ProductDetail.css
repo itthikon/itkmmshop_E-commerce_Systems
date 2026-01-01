@@ -178,6 +178,27 @@
   white-space: pre-wrap;
 }
 
+.product-defects {
+  padding: 20px;
+  background: #fff3cd;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
+}
+
+.product-defects h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #856404;
+  margin-bottom: 12px;
+}
+
+.defects-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #856404;
+  white-space: pre-wrap;
+}
+
 .product-actions {
   display: flex;
   flex-direction: column;

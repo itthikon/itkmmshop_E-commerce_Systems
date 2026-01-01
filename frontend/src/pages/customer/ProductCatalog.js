@@ -36,7 +36,7 @@ const ProductCatalog = () => {
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
-      setCategories(response.data.categories || []);
+      setCategories(response.data.data || []);
     } catch (err) {
       console.error('Error fetching categories:', err);
     }
@@ -53,13 +53,37 @@ const ProductCatalog = () => {
       };
       
       if (searchQuery) params.search = searchQuery;
-      if (selectedCategory) params.category = selectedCategory;
-      if (sortBy) params.sort = sortBy;
+      if (selectedCategory) params.category_id = selectedCategory;
+      
+      // Handle sorting
+      if (sortBy) {
+        switch(sortBy) {
+          case 'price_asc':
+            params.sort_by = 'price_including_vat';
+            params.sort_order = 'ASC';
+            break;
+          case 'price_desc':
+            params.sort_by = 'price_including_vat';
+            params.sort_order = 'DESC';
+            break;
+          case 'popularity':
+            params.sort_by = 'stock_quantity';
+            params.sort_order = 'DESC';
+            break;
+          case 'newest':
+            params.sort_by = 'created_at';
+            params.sort_order = 'DESC';
+            break;
+          default:
+            params.sort_by = 'created_at';
+            params.sort_order = 'DESC';
+        }
+      }
       
       const response = await api.get('/products', { params });
       
-      setProducts(response.data.products || []);
-      setTotalPages(response.data.totalPages || 1);
+      setProducts(response.data.data || []);
+      setTotalPages(response.data.pagination?.totalPages || 1);
     } catch (err) {
       setError(err.message || 'เกิดข้อผิดพลาดในการโหลดสินค้า');
       console.error('Error fetching products:', err);

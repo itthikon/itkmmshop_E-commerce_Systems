@@ -15,16 +15,13 @@ exports.createOrderFromCart = async (req, res) => {
     // Validation schema
     const schema = Joi.object({
       cart_id: Joi.number().integer().positive().required(),
+      payment_method: Joi.string().valid('bank_transfer', 'promptpay', 'cod', 'cash', 'credit_card').default('bank_transfer'),
       guest_name: Joi.string().max(100).when('user_id', {
         is: Joi.exist(),
         then: Joi.optional(),
         otherwise: Joi.required()
       }),
-      guest_email: Joi.string().email().max(255).when('user_id', {
-        is: Joi.exist(),
-        then: Joi.optional(),
-        otherwise: Joi.required()
-      }),
+      guest_email: Joi.string().email().max(255).optional().allow(null, ''),
       guest_phone: Joi.string().max(20).when('user_id', {
         is: Joi.exist(),
         then: Joi.optional(),
@@ -36,7 +33,7 @@ exports.createOrderFromCart = async (req, res) => {
       shipping_province: Joi.string().max(100).optional(),
       shipping_postal_code: Joi.string().max(10).optional(),
       shipping_cost: Joi.number().min(0).default(0),
-      notes: Joi.string().optional()
+      notes: Joi.string().optional().allow(null, '')
     });
 
     const { error, value } = schema.validate(req.body);
@@ -352,6 +349,8 @@ exports.guestOrderLookup = async (req, res) => {
  */
 exports.getAllOrders = async (req, res) => {
   try {
+    console.log('getAllOrders called with query:', req.query);
+    
     const options = {
       status: req.query.status,
       payment_status: req.query.payment_status,
@@ -363,12 +362,16 @@ exports.getAllOrders = async (req, res) => {
       limit: parseInt(req.query.limit) || 20
     };
 
+    console.log('Options:', options);
+
     // If regular user, only show their orders
     if (req.user && !['staff', 'admin'].includes(req.user.role)) {
       options.user_id = req.user.id;
     }
 
     const result = await Order.findAll(options);
+
+    console.log('Orders found:', result.orders.length);
 
     res.json({
       success: true,
@@ -381,7 +384,7 @@ exports.getAllOrders = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Failed to retrieve orders'
+        message: error.message || 'Failed to retrieve orders'
       }
     });
   }

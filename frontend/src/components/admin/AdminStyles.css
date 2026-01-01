@@ -1210,6 +1210,16 @@
   padding: 8px 16px;
   border-radius: 4px;
   transition: all 0.2s;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-link .notification-badge {
+  position: relative;
+  top: 0;
+  transform: none;
 }
 
 .nav-link:hover {

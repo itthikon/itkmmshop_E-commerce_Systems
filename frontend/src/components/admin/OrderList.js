@@ -25,14 +25,17 @@ const OrderList = ({ onViewDetails }) => {
       if (filters.status) params.append('status', filters.status);
       if (filters.payment_status) params.append('payment_status', filters.payment_status);
       if (filters.search) params.append('search', filters.search);
-      params.append('sortBy', filters.sortBy);
-      params.append('sortOrder', filters.sortOrder);
+      params.append('sort_by', filters.sortBy);
+      params.append('sort_order', filters.sortOrder);
 
+      console.log('Fetching orders with params:', params.toString());
       const response = await api.get(`/orders?${params.toString()}`);
+      console.log('Orders response:', response.data);
       setOrders(response.data.data || []);
       setError(null);
     } catch (err) {
-      setError(err.message || 'ไม่สามารถโหลดข้อมูลคำสั่งซื้อได้');
+      console.error('Error fetching orders:', err);
+      setError(err.response?.data?.error?.message || err.message || 'ไม่สามารถโหลดข้อมูลคำสั่งซื้อได้');
     } finally {
       setLoading(false);
     }

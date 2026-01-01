@@ -11,9 +11,9 @@ class User {
       password,
       first_name,
       last_name,
-      gender,
-      birth_date,
-      phone,
+      gender = null,
+      birth_date = null,
+      phone = null,
       role = 'customer'
     } = userData;
 
@@ -27,7 +27,7 @@ class User {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const [result] = await db.execute(query, [
+    const [result] = await db.pool.execute(query, [
       email,
       password_hash,
       first_name,
@@ -46,7 +46,7 @@ class User {
    */
   static async findByEmail(email) {
     const query = 'SELECT * FROM users WHERE email = ?';
-    const [rows] = await db.execute(query, [email]);
+    const [rows] = await db.pool.execute(query, [email]);
     return rows[0];
   }
 
@@ -55,7 +55,7 @@ class User {
    */
   static async findById(id) {
     const query = 'SELECT * FROM users WHERE id = ?';
-    const [rows] = await db.execute(query, [id]);
+    const [rows] = await db.pool.execute(query, [id]);
     return rows[0];
   }
 
@@ -85,7 +85,7 @@ class User {
       WHERE id = ?
     `;
 
-    const [result] = await db.execute(query, [
+    const [result] = await db.pool.execute(query, [
       first_name,
       last_name,
       gender,
@@ -107,7 +107,7 @@ class User {
       FROM users 
       WHERE id = ?
     `;
-    const [rows] = await db.execute(query, [id]);
+    const [rows] = await db.pool.execute(query, [id]);
     return rows[0];
   }
 }

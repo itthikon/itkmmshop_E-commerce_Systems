@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Test: File Validation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-section h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .test-section p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .file-input-wrapper {
+            margin: 15px 0;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .test-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .test-results-summary {
+            background: #e7f3ff;
+            border: 2px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .test-results-summary h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .test-results-summary ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .test-results-summary li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .test-results-summary li:last-child {
+            border-bottom: none;
+        }
+
+        .pass {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .fail {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .file-info {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Manual Test: File Validation</h1>
+        <p class="subtitle">ทดสอบการตรวจสอบไฟล์สำหรับการอัปโหลดสลิปการชำระเงิน</p>
+
+        <div class="instructions">
+            <h3>📋 คำแนะนำการทดสอบ</h3>
+            <ul>
+                <li><strong>Test 1:</strong> ลองอัปโหลดไฟล์ที่ไม่ใช่รูปภาพ (PDF, DOC, TXT, etc.)</li>
+                <li><strong>Test 2:</strong> ลองอัปโหลดไฟล์รูปภาพที่มีขนาดใหญ่กว่า 5MB</li>
+                <li><strong>Test 3:</strong> ลองอัปโหลดไฟล์รูปภาพที่ถูกต้อง (JPG, PNG ขนาดไม่เกิน 5MB)</li>
+            </ul>
+        </div>
+
+        <!-- Test 1: Invalid File Type -->
+        <div class="test-section">
+            <h2>Test 1: ไฟล์ประเภทไม่ถูกต้อง</h2>
+            <p>ทดสอบการอัปโหลดไฟล์ที่ไม่ใช่รูปภาพ (PDF, DOC, TXT, GIF, SVG, etc.)</p>
+            <p><strong>ผลลัพธ์ที่คาดหวัง:</strong> ระบบควรแสดงข้อความแจ้งเตือน "กรุณาเลือกไฟล์รูปภาพ (.jpg, .jpeg, .png) เท่านั้น"</p>
+            
+            <div class="file-input-wrapper">
+                <input type="file" id="test1-file" accept="*/*">
+            </div>
+            <button class="test-button" onclick="testInvalidFileType()">ทดสอบ</button>
+            <div id="test1-result" class="result"></div>
+        </div>
+
+        <!-- Test 2: File Too Large -->
+        <div class="test-section">
+            <h2>Test 2: ไฟล์ขนาดใหญ่เกินไป</h2>
+            <p>ทดสอบการอัปโหลดไฟล์รูปภาพที่มีขนาดใหญ่กว่า 5MB</p>
+            <p><strong>ผลลัพธ์ที่คาดหวัง:</strong> ระบบควรแสดงข้อความแจ้งเตือน "ขนาดไฟล์ต้องไม่เกิน 5MB"</p>
+            
+            <div class="file-input-wrapper">
+                <input type="file" id="test2-file" accept="image/*">
+            </div>
+            <button class="test-button" onclick="testFileTooLarge()">ทดสอบ</button>
+            <div id="test2-result" class="result"></div>
+        </div>
+
+        <!-- Test 3: Valid File -->
+        <div class="test-section">
+            <h2>Test 3: ไฟล์ที่ถูกต้อง</h2>
+            <p>ทดสอบการอัปโหลดไฟล์รูปภาพที่ถูกต้อง (JPG, JPEG, PNG ขนาดไม่เกิน 5MB)</p>
+            <p><strong>ผลลัพธ์ที่คาดหวัง:</strong> ระบบควรยอมรับไฟล์และแสดงข้อความว่าไฟล์ถูกต้อง</p>
+            
+            <div class="file-input-wrapper">
+                <input type="file" id="test3-file" accept="image/jpeg,image/jpg,image/png">
+            </div>
+            <button class="test-button" onclick="testValidFile()">ทดสอบ</button>
+            <div id="test3-result" class="result"></div>
+        </div>
+
+        <!-- Test Results Summary -->
+        <div class="test-results-summary">
+            <h3>📊 สรุปผลการทดสอบ</h3>
+            <ul id="test-summary">
+                <li>รอการทดสอบ...</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Validation constants
+        const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+        const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+        // Test results tracking
+        const testResults = {
+            test1: null,
+            test2: null,
+            test3: null
+        };
+
+        /**
+         * Validates an image file
+         */
+        function validateImageFile(file) {
+            if (!file) {
+                return {
+                    valid: false,
+                    error: 'กรุณาเลือกไฟล์สลิปการโอนเงิน'
+                };
+            }
+
+            if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+                return {
+                    valid: false,
+                    error: 'กรุณาเลือกไฟล์รูปภาพ (.jpg, .jpeg, .png) เท่านั้น'
+                };
+            }
+
+            const fileName = file.name.toLowerCase();
+            const hasValidExtension = ALLOWED_EXTENSIONS.some(ext => fileName.endsWith(ext));
+            
+            if (!hasValidExtension) {
+                return {
+                    valid: false,
+                    error: 'กรุณาเลือกไฟล์รูปภาพ (.jpg, .jpeg, .png) เท่านั้น'
+                };
+            }
+
+            if (file.size > MAX_FILE_SIZE) {
+                return {
+                    valid: false,
+                    error: `ขนาดไฟล์ต้องไม่เกิน 5MB (ไฟล์ของคุณมีขนาด ${formatFileSize(file.size)})`
+                };
+            }
+
+            return {
+                valid: true,
+                error: null
+            };
+        }
+
+        /**
+         * Formats file size
+         */
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        /**
+         * Updates test results summary
+         */
+        function updateSummary() {
+            const summaryEl = document.getElementById('test-summary');
+            const results = [];
+
+            if (testResults.test1 !== null) {
+                results.push(`<li>Test 1 (Invalid File Type): <span class="${testResults.test1 ? 'pass' : 'fail'}">${testResults.test1 ? '✓ PASS' : '✗ FAIL'}</span></li>`);
+            }
+            if (testResults.test2 !== null) {
+                results.push(`<li>Test 2 (File Too Large): <span class="${testResults.test2 ? 'pass' : 'fail'}">${testResults.test2 ? '✓ PASS' : '✗ FAIL'}</span></li>`);
+            }
+            if (testResults.test3 !== null) {
+                results.push(`<li>Test 3 (Valid File): <span class="${testResults.test3 ? 'pass' : 'fail'}">${testResults.test3 ? '✓ PASS' : '✗ FAIL'}</span></li>`);
+            }
+
+            if (results.length === 0) {
+                summaryEl.innerHTML = '<li>รอการทดสอบ...</li>';
+            } else {
+                summaryEl.innerHTML = results.join('');
+            }
+        }
+
+        /**
+         * Test 1: Invalid File Type
+         */
+        function testInvalidFileType() {
+            const fileInput = document.getElementById('test1-file');
+            const resultEl = document.getElementById('test1-result');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                resultEl.className = 'result error show';
+                resultEl.innerHTML = '⚠️ กรุณาเลือกไฟล์ก่อนทดสอบ';
+                return;
+            }
+
+            const validation = validateImageFile(file);
+            
+            // Show file info
+            const fileInfo = `
+                <div class="file-info">
+                    <strong>ไฟล์:</strong> ${file.name}<br>
+                    <strong>ประเภท:</strong> ${file.type || 'unknown'}<br>
+                    <strong>ขนาด:</strong> ${formatFileSize(file.size)}
+                </div>
+            `;
+
+            if (!validation.valid) {
+                // Expected behavior: file should be rejected
+                testResults.test1 = true;
+                resultEl.className = 'result success show';
+                resultEl.innerHTML = `
+                    ✓ <strong>PASS:</strong> ระบบปฏิเสธไฟล์ตามที่คาดหวัง<br>
+                    <strong>ข้อความแจ้งเตือน:</strong> ${validation.error}
+                    ${fileInfo}
+                `;
+            } else {
+                // Unexpected: file should have been rejected
+                testResults.test1 = false;
+                resultEl.className = 'result error show';
+                resultEl.innerHTML = `
+                    ✗ <strong>FAIL:</strong> ระบบยอมรับไฟล์ที่ไม่ถูกต้อง (ควรปฏิเสธ)
+                    ${fileInfo}
+                `;
+            }
+
+            updateSummary();
+        }
+
+        /**
+         * Test 2: File Too Large
+         */
+        function testFileTooLarge() {
+            const fileInput = document.getElementById('test2-file');
+            const resultEl = document.getElementById('test2-result');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                resultEl.className = 'result error show';
+                resultEl.innerHTML = '⚠️ กรุณาเลือกไฟล์ก่อนทดสอบ';
+                return;
+            }
+
+            const validation = validateImageFile(file);
+            
+            // Show file info
+            const fileInfo = `
+                <div class="file-info">
+                    <strong>ไฟล์:</strong> ${file.name}<br>
+                    <strong>ประเภท:</strong> ${file.type}<br>
+                    <strong>ขนาด:</strong> ${formatFileSize(file.size)}
+                </div>
+            `;
+
+            if (file.size > MAX_FILE_SIZE) {
+                if (!validation.valid && validation.error.includes('5MB')) {
+                    // Expected behavior: large file should be rejected
+                    testResults.test2 = true;
+                    resultEl.className = 'result success show';
+                    resultEl.innerHTML = `
+                        ✓ <strong>PASS:</strong> ระบบปฏิเสธไฟล์ขนาดใหญ่ตามที่คาดหวัง<br>
+                        <strong>ข้อความแจ้งเตือน:</strong> ${validation.error}
+                        ${fileInfo}
+                    `;
+                } else {
+                    testResults.test2 = false;
+                    resultEl.className = 'result error show';
+                    resultEl.innerHTML = `
+                        ✗ <strong>FAIL:</strong> ระบบยอมรับไฟล์ขนาดใหญ่ (ควรปฏิเสธ)
+                        ${fileInfo}
+                    `;
+                }
+            } else {
+                // File is not too large, inform user
+                resultEl.className = 'result info show';
+                resultEl.innerHTML = `
+                    ℹ️ <strong>INFO:</strong> ไฟล์ที่เลือกมีขนาดไม่เกิน 5MB<br>
+                    กรุณาเลือกไฟล์ที่มีขนาดใหญ่กว่า 5MB เพื่อทดสอบ
+                    ${fileInfo}
+                `;
+            }
+
+            updateSummary();
+        }
+
+        /**
+         * Test 3: Valid File
+         */
+        function testValidFile() {
+            const fileInput = document.getElementById('test3-file');
+            const resultEl = document.getElementById('test3-result');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                resultEl.className = 'result error show';
+                resultEl.innerHTML = '⚠️ กรุณาเลือกไฟล์ก่อนทดสอบ';
+                return;
+            }
+
+            const validation = validateImageFile(file);
+            
+            // Show file info
+            const fileInfo = `
+                <div class="file-info">
+                    <strong>ไฟล์:</strong> ${file.name}<br>
+                    <strong>ประเภท:</strong> ${file.type}<br>
+                    <strong>ขนาด:</strong> ${formatFileSize(file.size)}
+                </div>
+            `;
+
+            if (validation.valid) {
+                // Expected behavior: valid file should be accepted
+                testResults.test3 = true;
+                resultEl.className = 'result success show';
+                resultEl.innerHTML = `
+                    ✓ <strong>PASS:</strong> ระบบยอมรับไฟล์ที่ถูกต้องตามที่คาดหวัง
+                    ${fileInfo}
+                `;
+            } else {
+                // Unexpected: valid file should have been accepted
+                testResults.test3 = false;
+                resultEl.className = 'result error show';
+                resultEl.innerHTML = `
+                    ✗ <strong>FAIL:</strong> ระบบปฏิเสธไฟล์ที่ถูกต้อง (ควรยอมรับ)<br>
+                    <strong>ข้อความแจ้งเตือน:</strong> ${validation.error}
+                    ${fileInfo}
+                `;
+            }
+
+            updateSummary();
+        }
+    </script>
+</body>
+</html>

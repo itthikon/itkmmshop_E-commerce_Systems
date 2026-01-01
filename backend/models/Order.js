@@ -33,6 +33,7 @@ class Order {
     const {
       cart_id,
       user_id = null,
+      payment_method = 'bank_transfer',
       guest_name = null,
       guest_email = null,
       guest_phone = null,
@@ -105,8 +106,8 @@ class Order {
           shipping_province, shipping_postal_code,
           subtotal_excluding_vat, total_vat_amount, discount_amount,
           shipping_cost, total_amount, voucher_code,
-          status, payment_status, source_platform, notes, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          status, payment_status, payment_method, source_platform, notes, created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       const [orderResult] = await connection.execute(orderQuery, [
@@ -128,6 +129,7 @@ class Order {
         cart.voucher_code,
         'pending',
         'pending',
+        payment_method,
         source_platform,
         notes,
         created_by
@@ -598,10 +600,9 @@ class Order {
 
     // Pagination
     const offset = (page - 1) * limit;
-    query += ' LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    query += ` LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`;
 
-    const [orders] = await db.pool.execute(query, params);
+    const [orders] = await db.pool.query(query, params);
 
     // Get total count
     let countQuery = 'SELECT COUNT(*) as total FROM orders WHERE 1=1';
@@ -633,7 +634,7 @@ class Order {
       countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
     }
 
-    const [countResult] = await db.pool.execute(countQuery, countParams);
+    const [countResult] = await db.pool.query(countQuery, countParams);
     const total = countResult[0].total;
 
     return {

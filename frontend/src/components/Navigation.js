@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { cartCount } = useCart();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -21,7 +23,7 @@ const Navigation = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-brand" onClick={closeMenu}>
-          itkmmshop
+          itkmmshop22
         </Link>
 
         <button 
@@ -46,8 +48,12 @@ const Navigation = () => {
             </Link>
           </li>
           <li>
-            <Link to="/cart" className={isActive('/cart')} onClick={closeMenu}>
-              ตะกร้า
+            <Link to="/cart" className={`cart-link ${isActive('/cart')}`} onClick={closeMenu}>
+              <span className="cart-icon">🛒</span>
+              <span>ตะกร้า</span>
+              {cartCount > 0 && (
+                <span className="cart-badge">{cartCount}</span>
+              )}
             </Link>
           </li>
           <li>

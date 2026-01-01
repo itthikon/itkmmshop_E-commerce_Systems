@@ -3,7 +3,7 @@ import axios from 'axios';
 import '../../components/admin/AdminStyles.css';
 import '../../components/admin/AnalyticsStyles.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050/api';
 
 const AnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);

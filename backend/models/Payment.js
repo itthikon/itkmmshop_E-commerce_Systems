@@ -271,10 +271,11 @@ class Payment {
 
     query += ' ORDER BY created_at DESC';
 
-    // Pagination
-    const offset = (page - 1) * limit;
-    query += ' LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    // Pagination - use string interpolation for LIMIT/OFFSET (safe after parseInt)
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+    const offset = (pageNum - 1) * limitNum;
+    query += ` LIMIT ${limitNum} OFFSET ${offset}`;
 
     const [payments] = await db.pool.execute(query, params);
     

@@ -24,7 +24,8 @@ class Product {
       stock_quantity,
       low_stock_threshold,
       image_path,
-      status
+      status,
+      defects
     } = productData;
 
     // Use default VAT rate if not provided
@@ -36,8 +37,8 @@ class Product {
         price_excluding_vat, vat_rate,
         cost_price_excluding_vat, cost_vat_amount,
         stock_quantity, low_stock_threshold,
-        image_path, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        image_path, status, defects
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -52,7 +53,8 @@ class Product {
       stock_quantity || 0,
       low_stock_threshold || 10,
       image_path || null,
-      status || 'active'
+      status || 'active',
+      defects || null
     ];
 
     const [result] = await db.pool.execute(query, values);
@@ -152,9 +154,9 @@ class Product {
     // Pagination
     const offset = (page - 1) * limit;
     query += ` LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
+    params.push(parseInt(limit), parseInt(offset));
 
-    const [rows] = await db.pool.execute(query, params);
+    const [rows] = await db.pool.query(query, params);
 
     // Get total count
     let countQuery = `
@@ -178,7 +180,7 @@ class Product {
       countParams.push(status);
     }
 
-    const [countResult] = await db.pool.execute(countQuery, countParams);
+    const [countResult] = await db.pool.query(countQuery, countParams);
     const total = countResult[0].total;
 
     return {
@@ -204,7 +206,7 @@ class Product {
       'price_excluding_vat', 'vat_rate',
       'cost_price_excluding_vat', 'cost_vat_amount',
       'stock_quantity', 'low_stock_threshold',
-      'image_path', 'status'
+      'image_path', 'status', 'defects'
     ];
 
     const updates = [];

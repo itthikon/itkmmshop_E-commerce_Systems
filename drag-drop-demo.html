@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag & Drop Upload Demo - itkmmshop22</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .demo-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .upload-dropzone {
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .upload-dropzone:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .upload-dropzone.drag-active {
+            border-color: #667eea;
+            background: #e6f0ff;
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .dropzone-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .dropzone-text {
+            font-size: 1.1rem;
+            color: #2d3748;
+            margin: 0 0 8px 0;
+            font-weight: 500;
+        }
+
+        .dropzone-hint {
+            font-size: 0.9rem;
+            color: #718096;
+            margin: 0;
+        }
+
+        .preview-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .preview-container.active {
+            display: block;
+        }
+
+        .preview-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 12px 16px;
+            background: #edf2f7;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+
+        .file-name {
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .file-size {
+            color: #718096;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .message.error {
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+        }
+
+        .message.success {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #22543d;
+        }
+
+        .message.info {
+            background: #ebf8ff;
+            border: 1px solid #90cdf4;
+            color: #2c5282;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .status-log {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .status-log-title {
+            font-size: 1rem;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .log-entry {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #4a5568;
+            border-left: 3px solid #667eea;
+        }
+
+        .log-entry.error {
+            border-left-color: #e53e3e;
+            color: #c53030;
+        }
+
+        .log-entry.success {
+            border-left-color: #38a169;
+            color: #22543d;
+        }
+
+        .instructions {
+            background: #ebf8ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .instructions h3 {
+            color: #2c5282;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #2d3748;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .upload-dropzone {
+                padding: 30px 15px;
+                min-height: 200px;
+            }
+
+            .dropzone-icon {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Drag & Drop Upload Demo</h1>
+        <p class="subtitle">itkmmshop22 Payment Slip Upload</p>
+
+        <div class="instructions">
+            <h3>📋 วิธีทดสอบ:</h3>
+            <ul>
+                <li>ลากไฟล์รูปภาพ (.jpg, .jpeg, .png) มาวางในกล่องด้านล่าง</li>
+                <li>หรือคลิกที่กล่องเพื่อเลือกไฟล์</li>
+                <li>ระบบจะตรวจสอบประเภทและขนาดไฟล์ (ต้องไม่เกิน 5MB)</li>
+                <li>ดูการเปลี่ยนแปลงของ UI และ log ด้านล่าง</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <div class="section-title">📤 Upload Area</div>
+            <div class="upload-dropzone" id="dropzone">
+                <div class="dropzone-icon">📁</div>
+                <p class="dropzone-text">ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</p>
+                <p class="dropzone-hint">รองรับไฟล์: .jpg, .jpeg, .png (ขนาดไม่เกิน 5MB)</p>
+            </div>
+
+            <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,image/jpeg,image/png" style="display: none;">
+
+            <div class="preview-container" id="previewContainer">
+                <img id="previewImage" class="preview-image" alt="Preview">
+                <div class="file-info">
+                    <span class="file-name" id="fileName">-</span>
+                    <span class="file-size" id="fileSize">-</span>
+                </div>
+            </div>
+
+            <div id="messageContainer"></div>
+
+            <div class="buttons" id="buttonContainer" style="display: none;">
+                <button class="btn btn-primary" id="uploadBtn">✓ อัปโหลดสลิป</button>
+                <button class="btn btn-secondary" id="clearBtn">✕ ล้าง</button>
+            </div>
+        </div>
+
+        <div class="status-log">
+            <div class="status-log-title">📊 Event Log</div>
+            <div id="logContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const messageContainer = document.getElementById('messageContainer');
+        const buttonContainer = document.getElementById('buttonContainer');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const logContainer = document.getElementById('logContainer');
+
+        let selectedFile = null;
+
+        // Logging function
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `${new Date().toLocaleTimeString('th-TH')} - ${message}`;
+            logContainer.insertBefore(entry, logContainer.firstChild);
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            messageContainer.innerHTML = `
+                <div class="message ${type}">
+                    <span>${type === 'error' ? '⚠️' : type === 'success' ? '✓' : 'ℹ️'}</span>
+                    <span>${text}</span>
+                </div>
+            `;
+        }
+
+        // Clear message
+        function clearMessage() {
+            messageContainer.innerHTML = '';
+        }
+
+        // Validate file
+        function validateFile(file) {
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            const maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (!validTypes.includes(file.type)) {
+                return {
+                    valid: false,
+                    error: 'กรุณาเลือกไฟล์รูปภาพ (.jpg, .jpeg, .png) เท่านั้น'
+                };
+            }
+
+            if (file.size > maxSize) {
+                const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+                return {
+                    valid: false,
+                    error: `ขนาดไฟล์ต้องไม่เกิน 5MB (ไฟล์ของคุณมีขนาด ${sizeMB} MB)`
+                };
+            }
+
+            return { valid: true };
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+        }
+
+        // Handle file selection
+        function handleFileSelect(file) {
+            log('File selected: ' + file.name);
+            clearMessage();
+
+            const validation = validateFile(file);
+            if (!validation.valid) {
+                log(validation.error, 'error');
+                showMessage(validation.error, 'error');
+                return;
+            }
+
+            selectedFile = file;
+            log('File validation passed', 'success');
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewContainer.classList.add('active');
+                fileName.textContent = '📎 ' + file.name;
+                fileSize.textContent = '(' + formatFileSize(file.size) + ')';
+                buttonContainer.style.display = 'flex';
+                log('Preview generated', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Drag events
+        dropzone.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('drag-active');
+            log('Drag enter detected');
+        });
+
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('drag-active');
+            log('Drag leave detected');
+        });
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('drag-active');
+            log('File dropped', 'success');
+
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Click to select
+        dropzone.addEventListener('click', () => {
+            if (!previewContainer.classList.contains('active')) {
+                log('Dropzone clicked - opening file picker');
+                fileInput.click();
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        // Upload button
+        uploadBtn.addEventListener('click', () => {
+            log('Upload button clicked');
+            showMessage('✓ อัปโหลดสำเร็จ! (Demo mode - ไม่มีการอัปโหลดจริง)', 'success');
+            log('Upload completed successfully', 'success');
+        });
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            log('Clear button clicked');
+            selectedFile = null;
+            previewContainer.classList.remove('active');
+            buttonContainer.style.display = 'none';
+            fileInput.value = '';
+            clearMessage();
+            log('Form cleared', 'success');
+        });
+
+        // Initial log
+        log('Demo initialized - Ready to test drag & drop', 'success');
+    </script>
+</body>
+</html>
