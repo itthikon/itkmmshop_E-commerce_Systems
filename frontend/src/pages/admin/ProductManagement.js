@@ -265,10 +265,15 @@ const ProductManagement = () => {
   const openAddModal = () => {
     setModalMode('add');
     setGeneratedSKU('');
+    
+    // หา category_id ของ "เสื้อผู้หญิง" เพื่อตั้งเป็นค่าเริ่มต้น
+    const defaultCategory = categories.find(cat => cat.name === 'เสื้อผู้หญิง');
+    const defaultCategoryId = defaultCategory ? defaultCategory.category_id : '';
+    
     setFormData({
       name: '',
       description: '',
-      category_id: '',
+      category_id: defaultCategoryId,
       price_excluding_vat: '',
       stock_quantity: '',
       low_stock_threshold: 10,

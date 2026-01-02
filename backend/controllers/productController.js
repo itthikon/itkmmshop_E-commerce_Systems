@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const ProductCategory = require('../models/ProductCategory');
 const SKUGeneratorService = require('../services/SKUGeneratorService');
+const FileNamingService = require('../services/FileNamingService');
 const Joi = require('joi');
 
 /**
@@ -531,6 +532,10 @@ exports.getStockHistory = async (req, res) => {
  * @access Private (Admin only)
  */
 exports.uploadImage = async (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  let renamedFilePath = null;
+  
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -542,9 +547,14 @@ exports.uploadImage = async (req, res) => {
       });
     }
 
-    // Check if product exists
+    // Check if product exists and get SKU
     const product = await Product.findById(req.params.id);
     if (!product) {
+      // Delete uploaded file if product not found
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      
       return res.status(404).json({
         success: false,
         error: {
@@ -554,20 +564,51 @@ exports.uploadImage = async (req, res) => {
       });
     }
 
-    // Update product with image path
-    const imagePath = `/uploads/products/${req.file.filename}`;
-    const updatedProduct = await Product.update(req.params.id, { image_path: imagePath });
+    // Rename file to SKU format
+    const newFilename = await FileNamingService.renameToSKUFormat(
+      req.file.path,
+      product.sku
+    );
+
+    // Track the renamed file path for cleanup if needed
+    renamedFilePath = path.join(path.dirname(req.file.path), newFilename);
+
+    // Update product with new image path
+    const imagePath = `/uploads/products/${newFilename}`;
+    const updatedProduct = await Product.update(req.params.id, { 
+      image_path: imagePath 
+    });
 
     res.json({
       success: true,
       data: {
         image_path: imagePath,
+        filename: newFilename,
         product: updatedProduct
       },
       message: 'อัปโหลดรูปภาพสำเร็จ'
     });
   } catch (err) {
     console.error('Upload image error:', err);
+    
+    // Comprehensive cleanup logic for failed uploads
+    try {
+      // Case 1: Original temp file still exists (rename failed)
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+        console.log(`Cleaned up temp file: ${req.file.path}`);
+      }
+      
+      // Case 2: Renamed file exists but database update failed
+      if (renamedFilePath && fs.existsSync(renamedFilePath)) {
+        fs.unlinkSync(renamedFilePath);
+        console.log(`Cleaned up renamed file: ${renamedFilePath}`);
+      }
+    } catch (cleanupErr) {
+      // Log cleanup errors but don't fail the response
+      console.error('Error during file cleanup:', cleanupErr);
+    }
+    
     res.status(500).json({
       success: false,
       error: {

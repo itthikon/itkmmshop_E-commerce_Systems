@@ -22,14 +22,34 @@ const productStorage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    // Generate unique filename with timestamp
+    // Temporary filename - will be renamed to SKU format after validation
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-    cb(null, `product-${uniqueSuffix}${ext}`);
+    cb(null, `temp-${uniqueSuffix}${ext}`);
   }
 });
 
-// File filter for images only
+// File filter for product images - only .jpg, .jpeg, .png
+const productImageFileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+  
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('กรุณาอัปโหลดไฟล์รูปภาพ .jpg, .jpeg หรือ .png เท่านั้น'), false);
+  }
+};
+
+// Configure multer for product images
+const uploadProductImage = multer({
+  storage: productStorage,
+  fileFilter: productImageFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
+
+// File filter for images only (for payment slips and other uploads)
 const imageFileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif|webp/;
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -41,15 +61,6 @@ const imageFileFilter = (req, file, cb) => {
     cb(new Error('Only image files are allowed (jpeg, jpg, png, gif, webp)'));
   }
 };
-
-// Configure multer for product images
-const uploadProductImage = multer({
-  storage: productStorage,
-  fileFilter: imageFileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
-});
 
 // Configure storage for payment slips
 const slipStorage = multer.diskStorage({

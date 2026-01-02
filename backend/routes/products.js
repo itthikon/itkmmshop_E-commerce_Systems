@@ -6,6 +6,46 @@ const { uploadProductImage } = require('../middleware/upload');
 const { cacheMiddleware, CACHE_DURATION } = require('../middleware/cache');
 
 /**
+ * Multer error handler middleware
+ * Handles file upload errors from multer
+ */
+const handleMulterError = (err, req, res, next) => {
+  if (err) {
+    // Multer errors
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'FILE_TOO_LARGE',
+          message: 'ขนาดไฟล์ต้องไม่เกิน 5MB'
+        }
+      });
+    }
+    
+    if (err.message === 'กรุณาอัปโหลดไฟล์รูปภาพ .jpg, .jpeg หรือ .png เท่านั้น') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_FILE_TYPE',
+          message: err.message
+        }
+      });
+    }
+    
+    // Other multer errors
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'UPLOAD_ERROR',
+        message: 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์'
+      }
+    });
+  }
+  
+  next();
+};
+
+/**
  * @route   POST /api/products/generate-sku
  * @desc    Generate SKU preview for product
  * @access  Private (Admin only)
@@ -73,7 +113,7 @@ router.delete('/:id', authenticate, authorize(['admin']), productController.dele
  * @desc    Upload product image
  * @access  Private (Admin only)
  */
-router.post('/:id/image', authenticate, authorize(['admin']), uploadProductImage.single('image'), productController.uploadImage);
+router.post('/:id/image', authenticate, authorize(['admin']), uploadProductImage.single('image'), handleMulterError, productController.uploadImage);
 
 /**
  * @route   DELETE /api/products/:id/image
