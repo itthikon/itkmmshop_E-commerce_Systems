@@ -8,6 +8,12 @@ import PaymentVerification from '../staff/PaymentVerification';
 import PaymentHistory from './PaymentHistory';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import FinancialReports from './FinancialReports';
+import AccountingDashboard from './AccountingDashboard';
+import TransactionList from './TransactionList';
+import AccountingCategoryManagement from './AccountingCategoryManagement';
+import ProfitLossReport from './ProfitLossReport';
+import CashFlowReport from './CashFlowReport';
+import AccountingSettings from './AccountingSettings';
 import ShopSettings from './ShopSettings';
 import NotificationBadge from '../../components/notifications/NotificationBadge';
 import usePaymentNotifications from '../../hooks/usePaymentNotifications';
@@ -15,6 +21,7 @@ import '../../components/admin/AdminStyles.css';
 
 const AdminDashboard = () => {
   const [user, setUser] = useState(null);
+  const [isAccountingOpen, setIsAccountingOpen] = useState(false);
   const navigate = useNavigate();
   const { pendingCount } = usePaymentNotifications();
 
@@ -77,6 +84,62 @@ const AdminDashboard = () => {
           <Link to="/admin/analytics" className="nav-link">
             วิเคราะห์ข้อมูล
           </Link>
+          <div className="nav-section">
+            <div 
+              className="nav-section-title" 
+              onClick={() => setIsAccountingOpen(!isAccountingOpen)}
+              style={{ cursor: 'pointer' }}
+            >
+              💼 บัญชีร้านค้า 
+              <span className="dropdown-arrow">{isAccountingOpen ? '▼' : '▶'}</span>
+            </div>
+            {isAccountingOpen && (
+              <div className="nav-section-content">
+                <Link 
+                  to="/admin/accounting/dashboard" 
+                  className="nav-link nav-link-sub"
+                  onClick={() => setIsAccountingOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link 
+                  to="/admin/accounting/transactions" 
+                  className="nav-link nav-link-sub"
+                  onClick={() => setIsAccountingOpen(false)}
+                >
+                  รายการรายรับ-รายจ่าย
+                </Link>
+                <Link 
+                  to="/admin/accounting/categories" 
+                  className="nav-link nav-link-sub"
+                  onClick={() => setIsAccountingOpen(false)}
+                >
+                  หมวดหมู่บัญชี
+                </Link>
+                <Link 
+                  to="/admin/accounting/reports/profit-loss" 
+                  className="nav-link nav-link-sub"
+                  onClick={() => setIsAccountingOpen(false)}
+                >
+                  รายงานกำไร-ขาดทุน
+                </Link>
+                <Link 
+                  to="/admin/accounting/reports/cash-flow" 
+                  className="nav-link nav-link-sub"
+                  onClick={() => setIsAccountingOpen(false)}
+                >
+                  รายงานกระแสเงินสด
+                </Link>
+                <Link 
+                  to="/admin/accounting/settings" 
+                  className="nav-link nav-link-sub"
+                  onClick={() => setIsAccountingOpen(false)}
+                >
+                  ตั้งค่าบัญชี
+                </Link>
+              </div>
+            )}
+          </div>
           <Link to="/admin/financial-reports" className="nav-link">
             รายงานการเงิน
           </Link>
@@ -99,6 +162,12 @@ const AdminDashboard = () => {
           <Route path="/payment-history" element={<PaymentHistory />} />
           <Route path="/create-order" element={<StaffOrderCreation />} />
           <Route path="/analytics" element={<AnalyticsDashboard />} />
+          <Route path="/accounting/dashboard" element={<AccountingDashboard />} />
+          <Route path="/accounting/transactions" element={<TransactionList />} />
+          <Route path="/accounting/categories" element={<AccountingCategoryManagement />} />
+          <Route path="/accounting/reports/profit-loss" element={<ProfitLossReport />} />
+          <Route path="/accounting/reports/cash-flow" element={<CashFlowReport />} />
+          <Route path="/accounting/settings" element={<AccountingSettings />} />
           <Route path="/financial-reports" element={<FinancialReports />} />
           <Route path="/settings" element={<ShopSettings />} />
         </Routes>
@@ -146,6 +215,31 @@ const DashboardHome = () => {
           <div className="card-icon">📊</div>
           <h3>วิเคราะห์ข้อมูล</h3>
           <p>ดูข้อมูลประชากรศาสตร์และการกระจายตามพื้นที่</p>
+        </Link>
+        <Link to="/admin/accounting/dashboard" className="dashboard-card">
+          <div className="card-icon">💼</div>
+          <h3>บัญชีร้านค้า</h3>
+          <p>ดูภาพรวมรายรับ-รายจ่าย และกำไรสุทธิ</p>
+        </Link>
+        <Link to="/admin/accounting/transactions" className="dashboard-card">
+          <div className="card-icon">📝</div>
+          <h3>รายการรายรับ-รายจ่าย</h3>
+          <p>บันทึกและจัดการรายการรายรับ-รายจ่ายทั้งหมด</p>
+        </Link>
+        <Link to="/admin/accounting/categories" className="dashboard-card">
+          <div className="card-icon">📁</div>
+          <h3>หมวดหมู่บัญชี</h3>
+          <p>จัดการหมวดหมู่รายรับและรายจ่าย</p>
+        </Link>
+        <Link to="/admin/accounting/reports/profit-loss" className="dashboard-card">
+          <div className="card-icon">📈</div>
+          <h3>รายงานกำไร-ขาดทุน</h3>
+          <p>ดูรายงานกำไร-ขาดทุนตามช่วงเวลา</p>
+        </Link>
+        <Link to="/admin/accounting/reports/cash-flow" className="dashboard-card">
+          <div className="card-icon">💸</div>
+          <h3>รายงานกระแสเงินสด</h3>
+          <p>ติดตามกระแสเงินสดเข้า-ออก</p>
         </Link>
         <Link to="/admin/financial-reports" className="dashboard-card">
           <div className="card-icon">💰</div>

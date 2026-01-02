@@ -18,6 +18,10 @@ const ProductDetail = () => {
     fetchProduct();
   }, [id]);
 
+  useEffect(() => {
+    fetchProduct();
+  }, [id]);
+
   const fetchProduct = async () => {
     setLoading(true);
     setError(null);
@@ -26,7 +30,21 @@ const ProductDetail = () => {
       const response = await api.get(`/products/${id}`);
       setProduct(response.data.product);
     } catch (err) {
-      setError(err.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูลสินค้า');
+      // Handle 404 specifically for deleted/non-existent products
+      // Requirements: 6.3
+      if (err.response && err.response.status === 404) {
+        setError({
+          type: 'not_found',
+          message: 'ไม่พบสินค้าที่คุณกำลังค้นหา',
+          details: 'สินค้านี้อาจถูกลบหรือไม่มีอยู่ในระบบ'
+        });
+      } else {
+        setError({
+          type: 'error',
+          message: err.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูลสินค้า',
+          details: 'กรุณาลองใหม่อีกครั้งหรือติดต่อเจ้าหน้าที่'
+        });
+      }
       console.error('Error fetching product:', err);
     } finally {
       setLoading(false);
@@ -83,11 +101,26 @@ const ProductDetail = () => {
 
   if (error || !product) {
     return (
-      <div className="error-message">
-        <p>{error || 'ไม่พบสินค้า'}</p>
-        <button onClick={() => navigate('/products')} className="back-button">
-          กลับไปหน้าสินค้า
-        </button>
+      <div className="product-not-found">
+        <div className="not-found-content">
+          <div className="not-found-icon">
+            {error?.type === 'not_found' ? '🔍' : '⚠️'}
+          </div>
+          <h1 className="not-found-title">
+            {error?.message || 'ไม่พบสินค้า'}
+          </h1>
+          <p className="not-found-details">
+            {error?.details || 'สินค้าที่คุณกำลังค้นหาอาจถูกลบหรือไม่มีอยู่ในระบบ'}
+          </p>
+          <div className="not-found-actions">
+            <button onClick={() => navigate('/products')} className="back-to-products-button">
+              กลับไปหน้าสินค้า
+            </button>
+            <button onClick={() => navigate('/')} className="back-to-home-button">
+              กลับหน้าหลัก
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

@@ -802,6 +802,27 @@ class Order {
 
       await connection.commit();
       
+      // Create reversal transaction if there's an existing income transaction for this order
+      // Import here to avoid circular dependency
+      const Transaction = require('./Transaction');
+      const TransactionService = require('../services/TransactionService');
+      
+      // Find the original transaction for this order
+      Transaction.findAll({ reference_type: 'order', reference_id: id }).then(result => {
+        if (result.transactions && result.transactions.length > 0) {
+          // Find the income transaction (not a reversal)
+          const originalTransaction = result.transactions.find(t => 
+            t.transaction_type === 'income' && parseFloat(t.amount) > 0
+          );
+          
+          if (originalTransaction) {
+            return TransactionService.createReversal(originalTransaction.id, cancelledBy || 1);
+          }
+        }
+      }).catch(error => {
+        console.error('Reversal transaction creation error:', error);
+      });
+      
       return await this.findById(id);
     } catch (error) {
       await connection.rollback();

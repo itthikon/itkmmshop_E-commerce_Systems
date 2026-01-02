@@ -377,3 +377,135 @@
     align-items: flex-start;
   }
 }
+
+/* Product Not Found / Error Page Styles */
+.product-not-found {
+  max-width: 600px;
+  margin: 80px auto;
+  padding: 24px;
+}
+
+.not-found-content {
+  background: white;
+  padding: 48px 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.not-found-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+  animation: fadeInScale 0.5s ease;
+}
+
+.not-found-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+  animation: fadeInUp 0.5s ease 0.1s both;
+}
+
+.not-found-details {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 32px;
+  animation: fadeInUp 0.5s ease 0.2s both;
+}
+
+.not-found-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  animation: fadeInUp 0.5s ease 0.3s both;
+}
+
+.back-to-products-button,
+.back-to-home-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-to-products-button {
+  background: #007bff;
+  color: white;
+}
+
+.back-to-products-button:hover {
+  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.back-to-home-button {
+  background: white;
+  color: #007bff;
+  border: 2px solid #007bff;
+}
+
+.back-to-home-button:hover {
+  background: #f8f9fa;
+  transform: translateY(-2px);
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive design for error page */
+@media (max-width: 480px) {
+  .product-not-found {
+    margin: 40px auto;
+    padding: 16px;
+  }
+  
+  .not-found-content {
+    padding: 32px 20px;
+  }
+  
+  .not-found-icon {
+    font-size: 60px;
+  }
+  
+  .not-found-title {
+    font-size: 22px;
+  }
+  
+  .not-found-details {
+    font-size: 14px;
+  }
+  
+  .not-found-actions {
+    flex-direction: column;
+  }
+  
+  .back-to-products-button,
+  .back-to-home-button {
+    width: 100%;
+  }
+}

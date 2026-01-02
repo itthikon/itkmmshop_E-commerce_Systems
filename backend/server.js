@@ -105,6 +105,7 @@ const paymentRoutes = require('./routes/payments');
 const financialRoutes = require('./routes/financial');
 const analyticsRoutes = require('./routes/analytics');
 const monitoringRoutes = require('./routes/monitoring');
+const accountingRoutes = require('./routes/accounting');
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -118,6 +119,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/monitoring', monitoringRoutes);
+app.use('/api/accounting', accountingRoutes);
 
 app.get('/api', (req, res) => {
   res.json({ 
@@ -135,7 +137,8 @@ app.get('/api', (req, res) => {
       orders: '/api/orders',
       payments: '/api/payments',
       financial: '/api/financial',
-      analytics: '/api/analytics'
+      analytics: '/api/analytics',
+      accounting: '/api/accounting'
     }
   });
 });

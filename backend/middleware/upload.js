@@ -116,8 +116,45 @@ const uploadPackingMedia = multer({
   }
 });
 
+// Configure storage for accounting attachments
+const attachmentStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = 'uploads/attachments';
+    ensureDirectoryExists(uploadDir);
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, `attachment-${uniqueSuffix}${ext}`);
+  }
+});
+
+// File filter for accounting attachments - PDF, JPG, PNG only
+const attachmentFileFilter = (req, file, cb) => {
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+  const allowedExtensions = /pdf|jpeg|jpg|png/;
+  const extname = allowedExtensions.test(path.extname(file.originalname).toLowerCase());
+  
+  if (allowedTypes.includes(file.mimetype) && extname) {
+    cb(null, true);
+  } else {
+    cb(new Error('ประเภทไฟล์ไม่ถูกต้อง (รองรับเฉพาะ PDF, JPG, PNG)'), false);
+  }
+};
+
+// Configure multer for accounting attachments
+const uploadAttachment = multer({
+  storage: attachmentStorage,
+  fileFilter: attachmentFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
+
 module.exports = {
   uploadProductImage,
   uploadPaymentSlip,
-  uploadPackingMedia
+  uploadPackingMedia,
+  uploadAttachment
 };

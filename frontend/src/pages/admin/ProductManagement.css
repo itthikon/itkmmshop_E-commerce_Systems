@@ -241,6 +241,47 @@
   color: #92400e;
 }
 
+/* QR Code Section in Product Card */
+.product-qrcode-section {
+  padding: 0 25px 20px 25px;
+  border-bottom: 2px solid #f3f4f6;
+  margin-bottom: 15px;
+}
+
+.qrcode-thumbnail {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+  padding: 15px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 2px dashed #d1d5db;
+}
+
+.qrcode-thumbnail .qrcode-display-container {
+  transform: scale(0.8);
+}
+
+.qrcode-actions-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.qrcode-actions-wrapper .qrcode-actions-container {
+  width: 100%;
+}
+
+.qrcode-actions-wrapper .qrcode-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.qrcode-actions-wrapper .qrcode-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
 .action-bar {
   margin-bottom: 20px;
   display: flex;
@@ -591,6 +632,32 @@
 
 .form-group.full-width {
   grid-column: 1 / -1;
+}
+
+/* QR Code Section in Modal */
+.modal-qrcode-section {
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.modal-qrcode-display {
+  display: flex;
+  justify-content: center;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  border: 2px dashed #d1d5db;
+}
+
+.modal-qrcode-actions {
+  width: 100%;
+  max-width: 400px;
 }
 
 .form-group label {

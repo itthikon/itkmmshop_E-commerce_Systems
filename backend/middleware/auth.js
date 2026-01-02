@@ -96,8 +96,67 @@ const optionalAuth = (req, res, next) => {
   }
 };
 
+/**
+ * Admin authentication middleware - combines authenticate and admin authorization
+ * Specifically for accounting system and other admin-only features
+ */
+const requireAdmin = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    // Check if authorization header exists
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'กรุณาเข้าสู่ระบบ'
+        }
+      });
+    }
+
+    const token = authHeader.substring(7);
+    
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    
+    // Check if user has admin role
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'คุณไม่มีสิทธิ์เข้าถึงระบบบัญชี'
+        }
+      });
+    }
+    
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'TOKEN_EXPIRED',
+          message: 'Token หมดอายุ กรุณาเข้าสู่ระบบใหม่'
+        }
+      });
+    }
+    
+    return res.status(401).json({
+      success: false,
+      error: {
+        code: 'INVALID_TOKEN',
+        message: 'Token ไม่ถูกต้อง'
+      }
+    });
+  }
+};
+
 module.exports = {
   authenticate,
   authorize,
-  optionalAuth
+  optionalAuth,
+  requireAdmin
 };

@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+*/node_modules/
 
 # Environment variables
 .env
@@ -7,6 +8,8 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+backend/.env
+frontend/.env
 
 # Logs
 logs/
@@ -14,28 +17,63 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+backend/logs/
+frontend/logs/
 
 # Build outputs
 build/
 dist/
+frontend/build/
 
-# Uploads
+# Uploads (production files)
 uploads/
+backend/uploads/products/*
+backend/uploads/receipts/*
+!backend/uploads/products/.gitkeep
+!backend/uploads/receipts/.gitkeep
 
 # Coverage
 coverage/
+backend/coverage/
+frontend/coverage/
 
 # OS files
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
 # Temporary files
 tmp/
 temp/
+
+# Test files (optional - ถ้าไม่ต้องการ deploy)
+backend/test-*.js
+backend/test-*.html
+frontend/test-*.html
+*.test.js
+*.spec.js
+
+# Documentation (optional)
+*.md
+!README.md
+!HOSTATOM_DEPLOYMENT_GUIDE.md
+
+# Database
+*.sql
+!backend/config/schema.sql
+
+# PM2
+.pm2/
+ecosystem.config.js
+
+# Package locks (optional - ขึ้นอยู่กับ preference)
+# package-lock.json
+# yarn.lock

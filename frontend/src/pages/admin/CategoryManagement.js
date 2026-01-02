@@ -158,7 +158,7 @@ const CategoryManagement = () => {
         await api.post('/categories', formData);
         alert('เพิ่มหมวดหมู่สำเร็จ!');
       } else if (modalMode === 'edit') {
-        const response = await api.put(`/categories/${selectedCategory.category_id}`, formData);
+        const response = await api.put(`/categories/${selectedCategory.id}`, formData);
         
         // Show warning message if returned from backend
         if (response.data.warning) {
@@ -202,7 +202,7 @@ const CategoryManagement = () => {
     }
     
     try {
-      await api.delete(`/categories/${category.category_id}`);
+      await api.delete(`/categories/${category.id}`);
       alert('ลบหมวดหมู่สำเร็จ!');
       fetchCategories();
     } catch (err) {
@@ -269,7 +269,7 @@ const CategoryManagement = () => {
           </thead>
           <tbody>
             {categories.map(category => (
-              <tr key={category.category_id}>
+              <tr key={category.id}>
                 <td className="category-name">
                   <strong>{category.name}</strong>
                 </td>

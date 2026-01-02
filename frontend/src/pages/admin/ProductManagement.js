@@ -434,6 +434,7 @@ const ProductManagement = () => {
     
     try {
       // Generate barcode
+      // eslint-disable-next-line no-undef
       JsBarcode(tempSvg, product.sku, {
         format: 'CODE128',
         width: barcodeWidth * scale,
@@ -662,6 +663,11 @@ const ProductManagement = () => {
 
   const formatPrice = (price) => {
     return parseFloat(price).toLocaleString('th-TH', { minimumFractionDigits: 2 });
+  };
+
+  const handleBulkGenerationComplete = (productIds) => {
+    console.log('Bulk QR Code generation completed for products:', productIds);
+    // Optionally refresh products or show additional feedback
   };
 
   if (loading) {

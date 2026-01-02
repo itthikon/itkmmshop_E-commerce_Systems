@@ -100,6 +100,30 @@ class Product {
   }
 
   /**
+   * Find multiple products by IDs
+   * @param {Array<number>} ids - Array of product IDs
+   * @returns {Promise<Array>} Array of products
+   */
+  static async findByIds(ids) {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+
+    const placeholders = ids.map(() => '?').join(',');
+    const query = `
+      SELECT 
+        p.*,
+        pc.name as category_name
+      FROM products p
+      LEFT JOIN product_categories pc ON p.category_id = pc.id
+      WHERE p.id IN (${placeholders})
+    `;
+    
+    const [rows] = await db.pool.execute(query, ids);
+    return rows;
+  }
+
+  /**
    * Get all products with filtering, sorting, and pagination
    * @param {Object} options - Query options
    * @returns {Promise<Object>} Products and pagination info

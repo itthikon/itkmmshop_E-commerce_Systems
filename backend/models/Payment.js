@@ -209,8 +209,15 @@ class Payment {
       
       const updatedPayment = await this.findById(id);
       
-      // Generate receipt PDF asynchronously (don't wait for it)
+      // Create accounting transaction for this payment
       // Import here to avoid circular dependency
+      const TransactionService = require('../services/TransactionService');
+      
+      TransactionService.createFromOrder(payment.order_id, id).catch(error => {
+        console.error('Transaction creation error:', error);
+      });
+      
+      // Generate receipt PDF asynchronously (don't wait for it)
       const Order = require('./Order');
       const ReceiptService = require('../services/ReceiptService');
       

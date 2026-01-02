@@ -6,9 +6,15 @@ const ShopSettings = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [hasLogo, setHasLogo] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // SlipOK API settings
+  const [slipOkApiKey, setSlipOkApiKey] = useState('');
+  const [slipOkEnabled, setSlipOkEnabled] = useState(false);
+  const [savingApiKey, setSavingApiKey] = useState(false);
 
   useEffect(() => {
     checkExistingLogo();
+    loadSlipOkSettings();
   }, []);
 
   const checkExistingLogo = () => {
@@ -23,6 +29,33 @@ const ShopSettings = () => {
       setLogoPreview(null);
     };
     img.src = '/logo.svg?' + new Date().getTime(); // Add timestamp to avoid cache
+  };
+
+  const loadSlipOkSettings = () => {
+    // Load SlipOK settings from localStorage
+    const apiKey = localStorage.getItem('slipOkApiKey') || '';
+    const enabled = localStorage.getItem('slipOkEnabled') === 'true';
+    setSlipOkApiKey(apiKey);
+    setSlipOkEnabled(enabled);
+  };
+
+  const handleSaveSlipOkSettings = () => {
+    if (slipOkEnabled && !slipOkApiKey.trim()) {
+      alert('กรุณากรอก API Key ของ SlipOK');
+      return;
+    }
+
+    setSavingApiKey(true);
+    try {
+      localStorage.setItem('slipOkApiKey', slipOkApiKey);
+      localStorage.setItem('slipOkEnabled', slipOkEnabled.toString());
+      alert('บันทึกการตั้งค่า SlipOK สำเร็จ!');
+    } catch (error) {
+      console.error('Save error:', error);
+      alert('เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+    } finally {
+      setSavingApiKey(false);
+    }
   };
 
   const handleLogoChange = (e) => {
@@ -210,6 +243,81 @@ const ShopSettings = () => {
                   </button>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+
+        <div className="settings-card">
+          <div className="card-header">
+            <h2>🔍 การตรวจสอบสลิปอัตโนมัติ (SlipOK)</h2>
+            <p className="card-description">
+              เชื่อมต่อกับ SlipOK API เพื่อตรวจสอบความถูกต้องของสลิปโอนเงินอัตโนมัติ
+            </p>
+          </div>
+
+          <div className="card-body">
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={slipOkEnabled}
+                  onChange={(e) => setSlipOkEnabled(e.target.checked)}
+                />
+                <span>เปิดใช้งานการตรวจสอบสลิปอัตโนมัติ</span>
+              </label>
+            </div>
+
+            {slipOkEnabled && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="slipok-api-key">
+                    SlipOK API Key <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="slipok-api-key"
+                    className="form-input"
+                    placeholder="กรอก API Key จาก SlipOK"
+                    value={slipOkApiKey}
+                    onChange={(e) => setSlipOkApiKey(e.target.value)}
+                  />
+                  <p className="field-hint">
+                    💡 สมัครและรับ API Key ได้ที่{' '}
+                    <a 
+                      href="https://www.slipok.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="external-link"
+                    >
+                      www.slipok.com
+                    </a>
+                  </p>
+                </div>
+
+                <div className="info-box">
+                  <div className="info-box-header">
+                    <span className="info-icon">ℹ️</span>
+                    <strong>วิธีการใช้งาน</strong>
+                  </div>
+                  <ol className="info-list-ordered">
+                    <li>สมัครสมาชิกที่ SlipOK.com</li>
+                    <li>รับ API Key จากหน้า Dashboard</li>
+                    <li>นำ API Key มากรอกในช่องด้านบน</li>
+                    <li>เปิดใช้งานและบันทึกการตั้งค่า</li>
+                    <li>ระบบจะตรวจสอบสลิปอัตโนมัติเมื่อลูกค้าอัพโหลด</li>
+                  </ol>
+                </div>
+              </>
+            )}
+
+            <div className="form-actions">
+              <button
+                className="action-btn save-btn"
+                onClick={handleSaveSlipOkSettings}
+                disabled={savingApiKey}
+              >
+                {savingApiKey ? '⏳ กำลังบันทึก...' : '💾 บันทึกการตั้งค่า'}
+              </button>
             </div>
           </div>
         </div>
